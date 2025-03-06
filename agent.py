@@ -15,8 +15,10 @@ grok_token = os.getenv("GROQ_API_KEY")
 if not grok_token:
     raise ValueError("GROQ_API_KEY not found in environment variables")
 
+
 class State(TypedDict):
     messages: Annotated[list, add_messages]
+
 
 memory = MemorySaver()
 
@@ -30,10 +32,13 @@ llm = ChatGroq(
 
 llm_with_tools = llm.bind_tools(tools)
 
+
 def chatbot(state: State):
-    return {"messages": [llm_with_tools.invoke(state["messages"]) ]}
+    return {"messages": [llm_with_tools.invoke(state["messages"])]}
+
 
 tool_node = BasicToolNode(tools)
+
 
 def route_tools(state: State):
     if isinstance(state, list):
@@ -46,6 +51,7 @@ def route_tools(state: State):
         return "tools"
     return END
 
+
 graph_builder.add_node("chatbot", chatbot)
 graph_builder.add_node("tools", tool_node)
 
@@ -57,6 +63,7 @@ graph_builder.add_edge("tools", "chatbot")
 graph = graph_builder.compile(checkpointer=memory)
 
 config = {"configurable": {"thread_id": "1"}}
+
 
 def process_chat(user_input: str) -> str:
     events = graph.stream(
